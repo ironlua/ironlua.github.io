@@ -148,6 +148,26 @@ h3 {
 	left: -240px;
 }
 
+#sidebarRight {
+	position: absolute;
+	text-align: left;
+	width: 160px;
+	top: 0;
+	left: 500px;
+}
+
+#sidebarRight li {
+	list-style: none;
+	margin: 2px 0;
+}
+
+#sidebarRight a {
+	border: none;
+	font-family: "Helvetica Neue", "Helvetica", serif;
+	font-size: 1.0em;
+	padding: 2px 4px;
+}
+
 #sidebar li {
 	list-style: none;
 	margin: 2px 0;
