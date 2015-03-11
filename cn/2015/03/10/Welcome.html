@@ -45,7 +45,131 @@
 		<h1><a href="/cn/2015/03/10/Welcome.html">欢迎使用 IronLua！</a></h1>
 	
 
-	<div class="post-content">
+	<div class="post-content"><p>首先我们通过Unity商店下载IronLua扩展包，并且导入Unity编辑器。</p>
+
+<p>稍等片刻，Unity编辑器会加载IronLua的编辑器扩展包：
+<img src="/images/menus.jpg" alt="IronLua菜单" title="Optional title" /></p>
+
+<ul>
+  <li>子菜单（Generate UnityEngine Lua Bind Scripts）： 编译UnityEngine.dll生成对应的lua扩展代码</li>
+  <li>子菜单（Generate Project Lua Bind Scripts）： 扫描当前Unity工程C#代码，生成对应的lua扩展代码</li>
+</ul>
+
+<h1 id="unityironlua">开始你的第一个Unity/IronLua项目</h1>
+
+<ul>
+  <li>创建一个空白的Unity工程，导入IronLua扩展包</li>
+  <li>在Assets目录下创建C#脚本文件：IronLuaTest.cs:</li>
+</ul>
+
+<div class="highlight"><pre><code class="language-c#" data-lang="c#"><span class="k">using</span> <span class="nn">UnityEngine</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Collections</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">IronLua.Native</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Reflection</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.IO</span><span class="p">;</span>
+
+<span class="k">namespace</span> <span class="nn">IronLua.Unity.Test</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">IronLuaTest</span> <span class="p">:</span> <span class="n">MonoBehaviour</span>
+    <span class="p">{</span>
+        <span class="k">private</span> <span class="k">readonly</span> <span class="n">ILua</span> <span class="n">_L</span> <span class="p">=</span> <span class="k">new</span> <span class="n">IronLua</span><span class="p">.</span><span class="n">Native</span><span class="p">.</span><span class="nf">Lua</span><span class="p">();</span>
+
+        <span class="k">private</span> <span class="n">LuaFunction</span> <span class="n">update</span><span class="p">;</span>
+
+        <span class="c1">// Use this for initialization
+</span>        <span class="k">void</span> <span class="nf">Start</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="c1">//LogManager.Close();
+</span>
+            <span class="n">LogManager</span><span class="p">.</span><span class="nf">Level</span><span class="p">(</span><span class="n">LogLevel</span><span class="p">.</span><span class="n">INFO</span><span class="p">);</span>
+            <span class="c1">// 将当前程序集导功能导出给Lua脚本
+</span>            <span class="n">_L</span><span class="p">.</span><span class="n">Context</span><span class="p">.</span><span class="nf">Bind</span><span class="p">(</span><span class="n">Assembly</span><span class="p">.</span><span class="nf">GetExecutingAssembly</span><span class="p">());</span>
+            <span class="c1">// 执行Unity [StreamingAssets](http://docs.unity3d.com/Manual/StreamingAssets.html) 目录下的 test.lua 脚本
+</span>            <span class="n">_L</span><span class="p">.</span><span class="nf">luaL_dofile</span><span class="p">(</span><span class="n">Path</span><span class="p">.</span><span class="nf">Combine</span><span class="p">(</span><span class="n">Application</span><span class="p">.</span><span class="n">streamingAssetsPath</span><span class="p">,</span> <span class="s">"test.lua"</span><span class="p">));</span>
+            <span class="c1">// 将 test.lua 脚本中定义的update函数导出到并保持给变量update
+</span>            <span class="n">update</span> <span class="p">=</span> <span class="n">_L</span><span class="p">.</span><span class="n">lua_tofunction</span><span class="p">&lt;</span><span class="n">LuaFunction</span><span class="p">&gt;(</span><span class="s">"update"</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Update is called once per frame
+</span>        <span class="k">void</span> <span class="nf">Update</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="c1">// 执行 test.lua 脚本中的update函数
+</span>            <span class="nf">update</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+
+<ul>
+  <li>在Assets目录下创建C#脚本文件：Extension.cs:</li>
+</ul>
+
+<div class="highlight"><pre><code class="language-c#" data-lang="c#"><span class="k">using</span> <span class="nn">UnityEngine</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Collections</span><span class="p">;</span>
+
+<span class="k">namespace</span> <span class="nn">IronLua.Unity.Test</span>
+<span class="p">{</span>
+    <span class="c1">// 使用属性“AOTAttribute”将委托原型Callback导出给Lua使用
+</span>    <span class="p">[</span><span class="n">AOTAttribute</span><span class="p">]</span>
+    <span class="k">public</span> <span class="k">delegate</span> <span class="k">void</span> <span class="nf">Callback</span><span class="p">(</span><span class="kt">string</span> <span class="n">message</span><span class="p">);</span>
+
+    <span class="c1">// 使用属性“AOTAttribute”将SampleClass以及它的所有公共成员导出给Lua使用
+</span>    <span class="p">[</span><span class="n">AOTAttribute</span><span class="p">]</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">SampleClass</span>
+    <span class="p">{</span>
+        <span class="c1">// IronLua支持C#事件
+</span>        <span class="k">public</span> <span class="k">event</span> <span class="n">Callback</span> <span class="n">Callback</span><span class="p">;</span>
+
+        <span class="k">private</span> <span class="kt">int</span> <span class="k">value</span><span class="p">;</span>
+        <span class="c1">// IronLua支持表做为参数调用C#方法
+</span>        <span class="k">public</span> <span class="k">void</span> <span class="nf">Config</span><span class="p">(</span><span class="n">ITable</span> <span class="n">config</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// 访问 lua table
+</span>            <span class="nf">Callback</span><span class="p">(</span><span class="kt">string</span><span class="p">.</span><span class="nf">Format</span><span class="p">(</span><span class="s">"a={0},b={1}"</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s">"a"</span><span class="p">].</span><span class="n">Number</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s">"b"</span><span class="p">].</span><span class="n">Table</span><span class="p">));</span>
+        <span class="p">}</span>
+        <span class="c1">// IronLua对属性的支持
+</span>        <span class="k">public</span> <span class="kt">int</span> <span class="n">Value</span>
+        <span class="p">{</span>
+            <span class="k">get</span> <span class="p">{</span> <span class="k">return</span> <span class="k">value</span><span class="p">;</span> <span class="p">}</span>
+            <span class="k">set</span> <span class="p">{</span> <span class="k">this</span><span class="p">.</span><span class="k">value</span> <span class="p">=</span> <span class="k">value</span><span class="p">;</span> <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+
+<ul>
+  <li>在Assets/StreamingAssets目录下创建lua脚本：test.lua:</li>
+</ul>
+
+<div class="highlight"><pre><code class="language-lua" data-lang="lua"><span class="c1">-- 加载SampleClass</span>
+<span class="kd">local</span> <span class="n">sampleClass</span> <span class="o">=</span> <span class="nb">require</span> <span class="s2">"IronLua.Unity.Test.SampleClass,Assembly-CSharp"</span>
+<span class="c1">-- 加载UnityEngine#Debug类</span>
+<span class="kd">local</span> <span class="n">debug</span> <span class="o">=</span> <span class="nb">require</span> <span class="s2">"UnityEngine.Debug,UnityEngine"</span>
+<span class="c1">-- 创建新的SampleClass对象，IronLua暂时不支持构造函数重载</span>
+<span class="kd">local</span> <span class="n">sample</span> <span class="o">=</span> <span class="n">sampleClass</span><span class="p">.</span><span class="n">NewSampleClass</span><span class="p">()</span>
+<span class="c1">-- 为C#事件添加lua处理函数</span>
+<span class="n">sample</span><span class="p">.</span><span class="n">Callback</span><span class="p">:</span><span class="n">Add</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">debug</span><span class="p">.</span><span class="n">Log</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="k">end</span><span class="p">)</span>
+
+<span class="c1">-- 调用UnityEngine的日志函数</span>
+<span class="n">debug</span><span class="p">.</span><span class="n">Log</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+<span class="c1">-- 下面是C# property调用示例</span>
+<span class="n">debug</span><span class="p">.</span><span class="n">Log</span><span class="p">(</span><span class="n">sample</span><span class="p">.</span><span class="n">Value</span><span class="p">)</span>
+<span class="n">sample</span><span class="p">.</span><span class="n">Value</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">debug</span><span class="p">.</span><span class="n">Log</span><span class="p">(</span><span class="n">sample</span><span class="p">.</span><span class="n">Value</span><span class="p">)</span>
+
+<span class="c1">-- 调用对象方法，并且传入lua table作为它的第一个实参</span>
+<span class="n">sample</span><span class="p">:</span><span class="n">Config</span><span class="p">({</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">}})</span>
+
+<span class="c1">-- 定义lua函数 update 供C#代码调用</span>
+<span class="k">function</span> <span class="nf">update</span><span class="p">()</span>
+    <span class="n">sample</span><span class="p">.</span><span class="n">Value</span> <span class="o">=</span> <span class="n">sample</span><span class="p">.</span><span class="n">Value</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="k">end</span></code></pre></div>
+
+<ul>
+  <li>将IronLuaTest.cs脚本附加给摄像机并运行游戏，Unity编辑器日志窗口将打印：</li>
+</ul>
+
+<p><img src="/images/log.jpg" alt="日志" /></p>
 </div>
 
 	<p class="meta">Posted on <span class="postdate">Mar 10, 2015</span></p>
