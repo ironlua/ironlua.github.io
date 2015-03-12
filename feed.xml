@@ -7,7 +7,7 @@
 		<atom:link href="http://ironlua.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
-				<title>欢迎使用 IronLua！</title>
+				<title>你的第一个Unity/IronLua工程</title>
 				<description>&lt;p&gt;首先我们通过Unity商店下载IronLua扩展包，并且导入Unity编辑器。&lt;/p&gt;
 
 &lt;p&gt;稍等片刻，Unity编辑器会加载IronLua的编辑器扩展包：
